@@ -1,0 +1,42 @@
+---
+- name: Playbook to install tomcat
+  hosts: tomcat
+  become: true
+
+  tasks:
+  - name: Update all
+    yum: name=* state=latest update_cache=yes
+
+  - name: Install tomcat and all it's dependencies
+    yum: name={{ item }} state=latest update_cache=yes
+    loop:
+      - tomcat
+      - tomcat-webapps
+      - tomcat-admin-webapps
+      - tomcat-docs-webapp
+      - tomcat-javadoc
+      - epel-release
+      - nodejs
+
+  - name: Copy config with username and userpass
+    template: 
+      src: templates/tomcat-users.j2  
+      dest: /usr/share/tomcat/conf/tomcat-users.xml
+    notify: Restart tomcat
+
+  - name: Copy config for logging
+    template:
+      src: templates/tomcat.j2
+      dest: /usr/share/tomcat/conf/tomcat.conf
+    notify: Restart tomcat   
+
+  - name: Open port 8080 and 9000
+    firewalld: port={{ item }}/tcp permanent=yes state=enabled immediate=yes
+    loop:
+      - 8080
+      - 9000
+
+  handlers:
+
+  - name: Restart tomcat
+    service: name=tomcat state=restarted enabled=true

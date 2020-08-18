@@ -1,0 +1,28 @@
+---
+- name: Set hostnames for logging
+  hosts: all:!zabbix_srv
+  become: true
+
+  tasks:
+#  - name: Stop rsyslog
+#    systemd: name=rsyslog state=stopped
+
+  - name: Set hostname in /etc/hostname
+    hostname: name={{ inventory_hostname }}
+
+  - name: Set hostname in kernel
+    sysctl:
+      name: kernel.hostname
+      value: "{{ inventory_hostname }}"
+      sysctl_set: yes
+    notify:
+      - Change time to vcita
+      - Restart rsyslog
+
+  handlers:
+
+  - name: Change time to vcita
+    shell: vmware-toolbox-cmd timesync enable
+
+  - name: Restart rsyslog
+    systemd: name=rsyslog state=restarted

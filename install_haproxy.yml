@@ -1,0 +1,35 @@
+---
+- name: Install HaProxy and drop config file for loadbalancing
+  hosts: haproxy
+  become: true
+
+  tasks:
+  - name: Update all
+    yum: name=* state=latest update_cache=yes
+
+  - name: Install HaProxy
+    yum: name=haproxy state=latest update_cache=yes
+
+  - name: Copy config
+    template: src=templates/haproxy.j2  dest=/etc/haproxy/haproxy.cfg mode=0644
+    notify: Restart HaProxy
+
+  - name: Open port 80 and 8404
+    firewalld: port={{ item }}/tcp permanent=yes state=enabled immediate=yes
+    loop: 
+      - 80
+      - 8404
+
+  - name: Setting selinux in permissive mode
+    selinux: policy=targeted state=permissive
+
+  - name: Install libsemanage-python for seboolean
+    yum: name=libsemanage-python state=latest update_cache=yes
+
+  - name: Setting seboolean haproxy_connect_any to true
+    seboolean: name=haproxy_connect_any state=yes persistent=yes
+
+  handlers:
+
+  - name: Restart HaProxy
+    service: name=haproxy state=restarted enabled=true

@@ -1,0 +1,29 @@
+---
+- name: Install Nginx and drop config file for loadbalancing
+  hosts: nginx
+  become: true
+
+  tasks:
+  - name: Update all
+    yum: name=* state=latest update_cache=yes
+
+  - name: Install Nginx
+    yum: name={{ item }} state=latest update_cache=yes
+    loop:
+      - epel-release
+      - nginx
+
+  - name: Copy config
+    template: src=templates/nginx.j2  dest=/etc/nginx/nginx.conf mode=0644
+    notify: Restart Nginx
+
+  - name: Open port 80
+    firewalld: port=80/tcp permanent=yes state=enabled immediate=yes
+
+  - name: Setting selinux in permissive mode
+    selinux: policy=targeted state=permissive
+
+  handlers:
+
+  - name: Restart Nginx
+    service: name=nginx state=restarted enabled=true

@@ -1,0 +1,38 @@
+---
+- name: Install PostgreSQL
+  hosts: postgresql
+  gather_facts: yes
+  become: true
+
+  tasks:
+  - name: Update all
+    yum: name=* state=latest update_cache=yes
+
+  - name: Install PostgreSQL with all dependencies
+    yum: name={{ item }} state=latest update_cache=yes
+    loop:
+      - postgresql-server
+      - postgresql-contrib
+
+  - name: Check if database initiated
+    stat: path=/var/lib/pgsql/data/pg_hba.conf
+    register: pgsql
+
+  - name: Initiate database
+    command : postgresql-setup initdb
+    when: not pgsql.stat.exists
+
+  - name: Start PostgreSQL
+    service: name=postgresql state=started enabled=true
+
+  - name: Open port 5432
+    firewalld: port=5432/tcp permanent=yes state=enabled immediate=yes
+
+  - name: Setting selinux in permissive mode
+    selinux: policy=targeted state=permissive
+
+  - name: Install libsemanage-python for seboolean
+    yum: name=libsemanage-python state=latest update_cache=yes
+
+  - name: Setting seboolean httpd_can_network_connect_db to true
+    seboolean: name=httpd_can_network_connect_db state=yes persistent=yes

@@ -1,0 +1,44 @@
+---
+- name: Install Keepalived and drop config file with monitoring
+  hosts: "{{ node }}"
+  become: true
+
+  tasks:
+
+  - name: Update all
+    yum: name=* state=latest update_cache=yes
+
+  - name: Install Keepalived with all dependencies
+    yum: name={{ item }} state=latest update_cache=yes
+    loop:
+      - keepalived
+      - psmisc
+
+  - name: Setting some kernel parameters
+    sysctl: 
+      name: "{{ item }}"
+      value: '1'
+    loop:
+      - net.ipv4.ip_forward
+      - net.ipv4.ip_nonlocal_bind
+
+  - name: Copy config
+    template: 
+      src: templates/keepalived.j2  
+      dest: /etc/keepalived/keepalived.conf 
+      mode: 0644
+    notify: Restart Keepalived
+
+  - name: Open port 80
+    firewalld: port=80/tcp permanent=yes state=enabled immediate=yes
+
+  - name: Allow multicast for keepalived
+    shell: firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 0 -m pkttype --pkt-type multicast -j ACCEPT && firewall-cmd --reload
+
+  - name: Setting selinux in permissive mode
+    selinux: policy=targeted state=permissive
+
+  handlers:
+
+  - name: Restart Keepalived
+    service: name=keepalived state=restarted enabled=true

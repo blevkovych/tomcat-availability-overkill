@@ -1,0 +1,19 @@
+[tomcat]
+Tomcat1 ansible_host=10.26.1.215
+Tomcat2 ansible_host=10.26.1.217
+Tomcat3 ansible_host=10.26.3.226
+
+[postgresql]
+Postgresql1 ansible_host=10.26.1.214
+Postgresql2 ansible_host=10.26.1.216
+
+[haproxy]
+HaProxy-Master ansible_host=10.26.1.210 #VIP=10.26.1.247
+HaProxy-Backup ansible_host=10.26.1.211
+
+[nginx]
+Nginx-Master ansible_host=10.26.1.212 #VIP=10.26.1.248
+Nginx-Backup ansible_host=10.26.1.213
+
+[zabbix_srv]
+zabbix-srv01 ansible_host=10.26.2.18

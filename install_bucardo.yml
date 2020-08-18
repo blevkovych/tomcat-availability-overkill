@@ -1,0 +1,90 @@
+---
+- name: Install Bucardo on PostgreSQL
+  hosts: postgresql
+  gather_facts: yes
+  become: true
+
+  tasks:
+  - name: Update all
+    yum: name=* state=latest update_cache=yes
+
+  - name: Create the user 'bucardo'
+    user: name=bucardo
+
+  - name: Download DBIx-Safe for Bucardo 
+    unarchive: 
+      src: https://bucardo.org/downloads/dbix_safe.tar.gz 
+      dest: /home
+      remote_src: yes
+      owner: bucardo
+
+  - name: Install perl dependencies
+    yum: name={{ item }} state=latest update_cache=yes
+    loop:
+      - postgresql-plperl
+      - perl-devel
+      - perl-DBD-Pg
+      - perl-Test-Simple
+      - perl-CGI
+      - perl-Encode-Locale
+      - perl-Pod-Parser
+      - perl-Sys-Syslog
+
+  - name: Install DBIx-Safe
+    shell: perl Makefile.PL && make && make test && make install
+    args:
+      chdir: /home/DBIx-Safe-1.2.5
+      creates: Makefile
+
+  - name: Download Bucardo
+    unarchive:
+      src: https://bucardo.org/downloads/Bucardo-5.6.0.tar.gz
+      dest: /home
+      remote_src: yes
+      owner: bucardo
+
+  - name: Install Bucardo
+    shell: perl Makefile.PL && make && make install
+    args:
+      chdir: /home/Bucardo-5.6.0
+      creates: Makefile
+
+  - name: Create a directory /var/run/bucardo and /var/log/bucardo/ 
+    file: path={{ item }}  state=directory owner=bucardo recurse=yes
+    loop: 
+      - /var/run/bucardo
+      - /var/log/bucardo
+
+  - name: Make sure that log.bucardo exists
+    copy:
+      content: ""
+      dest: /var/log/bucardo/log.bucardo
+      force: no
+      owner: bucardo
+
+  - name: Create a new database with name 'bucardo'
+    postgresql_db: name=bucardo
+    become_user: postgres
+
+  - name: Create user bucardo for database bucardo
+    postgresql_user:
+      name: bucardo
+      password: "{{ bucardo_password }}"
+      role_attr_flags: LOGIN,SUPERUSER
+    become_user: postgres
+    no_log: yes
+ 
+  - name: Install Bucardo as application
+    shell: 
+      cmd: ./bucardo install -batch 
+      chdir: /home/Bucardo-5.6.0 
+    become_user: bucardo
+    ignore_errors: yes
+    no_log: yes
+
+  - name: Start bucardo 
+    shell:
+      cmd: ./bucardo start
+      chdir: /home/Bucardo-5.6.0
+      creates: /var/run/bucardo/bucardo.mcp.pid
+    become_user: bucardo

@@ -1,0 +1,513 @@
+--
+-- PostgreSQL database dump
+--
+
+SET statement_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+
+--
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+SET search_path = public, pg_catalog;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: cardtype; Type: TABLE; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+CREATE TABLE cardtype (
+    id integer NOT NULL,
+    cardtype character varying(255),
+    cardnumber character varying(255),
+    cardcvv2 integer,
+    expiration_date character varying(255),
+    issuedate character varying(255),
+    issuenumber character varying(255)
+);
+
+
+ALTER TABLE public.cardtype OWNER TO {{ db_username }};
+
+--
+-- Name: customertypes; Type: TABLE; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+CREATE TABLE customertypes (
+    id integer NOT NULL,
+    discount double precision,
+    maxrange double precision,
+    minrange double precision,
+    typename character varying(255)
+);
+
+
+ALTER TABLE public.customertypes OWNER TO {{ db_username }};
+
+--
+-- Name: dimensions; Type: TABLE; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+CREATE TABLE dimensions (
+    id integer NOT NULL,
+    dimensionname character varying(255),
+    numberofproducts integer
+);
+
+
+ALTER TABLE public.dimensions OWNER TO {{ db_username }};
+
+--
+-- Name: hibernate_sequence; Type: SEQUENCE; Schema: public; Owner: omsuser
+--
+
+CREATE SEQUENCE hibernate_sequence
+    START WITH 15
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hibernate_sequence OWNER TO {{ db_username }};
+
+--
+-- Name: orderitems; Type: TABLE; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+CREATE TABLE orderitems (
+    id integer NOT NULL,
+    cost double precision,
+    itemprice double precision,
+    quantity integer,
+    dimensionref integer,
+    orderref integer,
+    productref integer
+);
+
+
+ALTER TABLE public.orderitems OWNER TO {{ db_username }};
+
+--
+-- Name: orders; Type: TABLE; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+CREATE TABLE orders (
+    id integer NOT NULL,
+    deliverydate timestamp without time zone,
+    isgift boolean,
+    maxdiscount integer,
+    orderdate timestamp without time zone,
+    ordername character varying(100),
+    ordernumber integer,
+    preferabledeliverydate timestamp without time zone,
+    totalprice double precision,
+    assigne integer,
+    customer integer,
+    orderstatusref integer
+);
+
+
+ALTER TABLE public.orders OWNER TO {{ db_username }};
+
+--
+-- Name: orderstatuses; Type: TABLE; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+CREATE TABLE orderstatuses (
+    id integer NOT NULL,
+    orederstatusname character varying(255)
+);
+
+
+ALTER TABLE public.orderstatuses OWNER TO {{ db_username }};
+
+--
+-- Name: products; Type: TABLE; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+CREATE TABLE products (
+    id integer NOT NULL,
+    isproductactive boolean,
+    productdescription character varying(255),
+    productname character varying(255),
+    productprice double precision
+);
+
+
+ALTER TABLE public.products OWNER TO {{ db_username }};
+
+--
+-- Name: regions; Type: TABLE; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+CREATE TABLE regions (
+    id integer NOT NULL,
+    regionname character varying(255)
+);
+
+
+ALTER TABLE public.regions OWNER TO {{ db_username }};
+
+--
+-- Name: roles; Type: TABLE; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+CREATE TABLE roles (
+    id integer NOT NULL,
+    rolename character varying(255)
+);
+
+
+ALTER TABLE public.roles OWNER TO {{ db_username }};
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+CREATE TABLE users (
+    id integer NOT NULL,
+    isuseractive boolean,
+    balance double precision,
+    email character varying(255) NOT NULL,
+    firstname character varying(255) NOT NULL,
+    lastname character varying(255) NOT NULL,
+    login character varying(255) NOT NULL,
+    password character varying(255) NOT NULL,
+    customertyperef integer,
+    regionref integer,
+    roleref integer NOT NULL
+);
+
+
+ALTER TABLE public.users OWNER TO {{ db_username }};
+
+--
+-- Data for Name: cardtype; Type: TABLE DATA; Schema: public; Owner: omsuser
+--
+
+COPY cardtype (id, cardtype, cardnumber, cardcvv2, expiration_date, issuedate, issuenumber) FROM stdin;
+\.
+
+
+--
+-- Data for Name: customertypes; Type: TABLE DATA; Schema: public; Owner: omsuser
+--
+
+COPY customertypes (id, discount, maxrange, minrange, typename) FROM stdin;
+1	0	1000	0	Standart
+2	0	3000	1000	Silver
+3	0	10000	3000	Gold
+4	0	\N	10000	Platinum
+\.
+
+
+--
+-- Data for Name: dimensions; Type: TABLE DATA; Schema: public; Owner: omsuser
+--
+
+COPY dimensions (id, dimensionname, numberofproducts) FROM stdin;
+1	Item	1
+2	Box	5
+3	Package	10
+\.
+
+
+--
+-- Name: hibernate_sequence; Type: SEQUENCE SET; Schema: public; Owner: omsuser
+--
+
+SELECT pg_catalog.setval('hibernate_sequence', 15, true);
+
+
+--
+-- Data for Name: orderitems; Type: TABLE DATA; Schema: public; Owner: omsuser
+--
+
+COPY orderitems (id, cost, itemprice, quantity, dimensionref, orderref, productref) FROM stdin;
+1	10	10	2	2	1	1
+2	10	10	2	1	2	2
+3	10	10	2	3	3	3
+4	10	10	2	2	4	4
+5	10	10	2	3	5	4
+6	10	10	2	1	6	3
+7	10	10	2	3	2	1
+8	10	10	2	2	4	2
+\.
+
+
+--
+-- Data for Name: orders; Type: TABLE DATA; Schema: public; Owner: omsuser
+--
+
+COPY orders (id, deliverydate, isgift, maxdiscount, orderdate, ordername, ordernumber, preferabledeliverydate, totalprice, assigne, customer, orderstatusref) FROM stdin;
+1	\N	\N	11	\N	OrderName1	1	\N	10	1	10	3
+2	\N	\N	12	\N	OrderName2	2	\N	10	3	11	3
+3	\N	\N	13	\N	OrderName3	3	\N	10	7	10	2
+4	\N	\N	14	\N	OrderName4	4	\N	10	4	10	1
+5	\N	\N	15	\N	OrderName5	5	\N	10	2	11	4
+6	\N	\N	16	\N	OrderName6	6	\N	10	2	10	1
+\.
+
+
+--
+-- Data for Name: orderstatuses; Type: TABLE DATA; Schema: public; Owner: omsuser
+--
+
+COPY orderstatuses (id, orederstatusname) FROM stdin;
+1	Created
+2	Pending
+3	Ordered
+4	Delivered
+\.
+
+
+--
+-- Data for Name: products; Type: TABLE DATA; Schema: public; Owner: omsuser
+--
+
+COPY products (id, isproductactive, productdescription, productname, productprice) FROM stdin;
+1	\N	productDescription1	productName1	1
+2	\N	productDescription2	productName2	2
+3	\N	productDescription3	productName3	3
+4	\N	productDescription4	productName4	4
+5	\N	productDescription5	productName5	5
+\.
+
+
+--
+-- Data for Name: regions; Type: TABLE DATA; Schema: public; Owner: omsuser
+--
+
+COPY regions (id, regionname) FROM stdin;
+1	North
+2	East
+3	South
+4	West
+\.
+
+
+--
+-- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: omsuser
+--
+
+COPY roles (id, rolename) FROM stdin;
+1	Administrator
+2	Merchandiser
+3	Supervisor
+4	Customer
+\.
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: omsuser
+--
+
+COPY users (id, isuseractive, balance, email, firstname, lastname, login, password, customertyperef, regionref, roleref) FROM stdin;
+1	t	10	mail	ivanka	horoshko	iva	qwerty	1	4	1
+2	t	10	mail	myroslav	shram	myroslav	qwerty	2	3	1
+3	t	10	mail	marko	bekhta	marko	qwerty	3	2	1
+4	t	10	mail	vitalik	nobis	vitalik	qwerty	4	1	1
+5	t	10	mail	orest	vovchack	orest	qwerty	1	4	1
+6	t	10	mail	roman	nazarevuch	romanN	qwerty	2	3	1
+7	t	10	mail	roman	svustyn	romanS	qwerty	3	2	1
+8	t	10	mail	firstName1	lastName1	login1	qwerty	1	1	2
+9	t	10	mail	firstName2	lastName2	login2	qwerty	1	1	3
+10	t	10	mail	firstName3	lastName3	login3	qwerty	1	1	4
+11	t	10	mail	firstName4	lastName4	login4	qwerty	1	2	4
+12	t	0	bib@gmail.com	Borys	Levkovych	Bober	qwerty	\N	2	4
+13	t	0	bib@gmail.com	a	a	aloha	qwerty	\N	1	4
+14	t	0	biasdb@gmail.com	awd	awd	alohadwa	qwerty	\N	1	4
+\.
+
+
+--
+-- Name: cardtype_pkey; Type: CONSTRAINT; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+ALTER TABLE ONLY cardtype
+    ADD CONSTRAINT cardtype_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: customertypes_pkey; Type: CONSTRAINT; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+ALTER TABLE ONLY customertypes
+    ADD CONSTRAINT customertypes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: dimensions_pkey; Type: CONSTRAINT; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+ALTER TABLE ONLY dimensions
+    ADD CONSTRAINT dimensions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: orderitems_pkey; Type: CONSTRAINT; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+ALTER TABLE ONLY orderitems
+    ADD CONSTRAINT orderitems_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: orders_ordernumber_key; Type: CONSTRAINT; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+ALTER TABLE ONLY orders
+    ADD CONSTRAINT orders_ordernumber_key UNIQUE (ordernumber);
+
+
+--
+-- Name: orders_pkey; Type: CONSTRAINT; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+ALTER TABLE ONLY orders
+    ADD CONSTRAINT orders_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: orderstatuses_pkey; Type: CONSTRAINT; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+ALTER TABLE ONLY orderstatuses
+    ADD CONSTRAINT orderstatuses_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: products_pkey; Type: CONSTRAINT; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+ALTER TABLE ONLY products
+    ADD CONSTRAINT products_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: regions_pkey; Type: CONSTRAINT; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+ALTER TABLE ONLY regions
+    ADD CONSTRAINT regions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: roles_pkey; Type: CONSTRAINT; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+ALTER TABLE ONLY roles
+    ADD CONSTRAINT roles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users_pkey; Type: CONSTRAINT; Schema: public; Owner: omsuser; Tablespace: 
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: fk4e39de83d05058f; Type: FK CONSTRAINT; Schema: public; Owner: omsuser
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT fk4e39de83d05058f FOREIGN KEY (roleref) REFERENCES roles(id);
+
+
+--
+-- Name: fk4e39de89aef426f; Type: FK CONSTRAINT; Schema: public; Owner: omsuser
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT fk4e39de89aef426f FOREIGN KEY (customertyperef) REFERENCES customertypes(id);
+
+
+--
+-- Name: fk4e39de8fead4dcf; Type: FK CONSTRAINT; Schema: public; Owner: omsuser
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT fk4e39de8fead4dcf FOREIGN KEY (regionref) REFERENCES regions(id);
+
+
+--
+-- Name: fk8d444f05990db877; Type: FK CONSTRAINT; Schema: public; Owner: omsuser
+--
+
+ALTER TABLE ONLY orders
+    ADD CONSTRAINT fk8d444f05990db877 FOREIGN KEY (orderstatusref) REFERENCES orderstatuses(id);
+
+
+--
+-- Name: fk8d444f05c0f431dd; Type: FK CONSTRAINT; Schema: public; Owner: omsuser
+--
+
+ALTER TABLE ONLY orders
+    ADD CONSTRAINT fk8d444f05c0f431dd FOREIGN KEY (assigne) REFERENCES users(id);
+
+
+--
+-- Name: fk8d444f05f161465; Type: FK CONSTRAINT; Schema: public; Owner: omsuser
+--
+
+ALTER TABLE ONLY orders
+    ADD CONSTRAINT fk8d444f05f161465 FOREIGN KEY (customer) REFERENCES users(id);
+
+
+--
+-- Name: fka2b1ad3262e1abf7; Type: FK CONSTRAINT; Schema: public; Owner: omsuser
+--
+
+ALTER TABLE ONLY orderitems
+    ADD CONSTRAINT fka2b1ad3262e1abf7 FOREIGN KEY (productref) REFERENCES products(id);
+
+
+--
+-- Name: fka2b1ad32a6376397; Type: FK CONSTRAINT; Schema: public; Owner: omsuser
+--
+
+ALTER TABLE ONLY orderitems
+    ADD CONSTRAINT fka2b1ad32a6376397 FOREIGN KEY (dimensionref) REFERENCES dimensions(id);
+
+
+--
+-- Name: fka2b1ad32bcdb3c97; Type: FK CONSTRAINT; Schema: public; Owner: omsuser
+--
+
+ALTER TABLE ONLY orderitems
+    ADD CONSTRAINT fka2b1ad32bcdb3c97 FOREIGN KEY (orderref) REFERENCES orders(id);
+
+
+--
+-- Name: public; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM postgres;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
+-- PostgreSQL database dump complete
+--
+

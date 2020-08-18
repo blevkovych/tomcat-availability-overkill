@@ -1,0 +1,98 @@
+---
+- name: Create master-master replication for both databases
+  hosts: "{{ node }}"
+  gather_facts: yes
+  become: true
+
+  tasks:
+  - name: Copy cron job
+    copy: 
+      src: templates/bucardo_restart/bucardoRestartIfStalled  
+      dest: /etc/cron.d
+ 
+  - name: Copy script which will reload bucardo when staled
+    copy:
+      src: templates/bucardo_restart/bucardoRestartIfStalled.sh
+      dest: /opt
+      mode: '0755'
+
+  - name: Check if those parameters are valid
+    shell: 
+      cmd: ./bucardo list all | grep -c '{{ local_name }}\|{{ remote_name }}\|{{ herd_name }}\|{{ group_name }}\|{{ sync_name }}'
+      chdir: /home/Bucardo-5.6.0
+    become_user: bucardo
+    register: sync_status
+    ignore_errors: true
+#  - debug: msg="{{sync_status.stdout}}"
+
+  - name: Add local database to sync
+    shell: 
+      cmd: ./bucardo add database {{ local_name }} dbname={{ db_name }} dbhost=127.0.0.1 dbuser=bucardo dbpass={{ bucardo_password }}
+      chdir: /home/Bucardo-5.6.0 
+    become_user: bucardo
+    when: sync_status.stdout == "0"
+    notify: Restart bucardo
+
+  - name: Add remote database to sync
+    shell:
+      cmd: ./bucardo add database {{ remote_name }} dbname={{ db_name }} dbhost={{ hostvars['Postgresql2'].ansible_host }} dbuser=bucardo dbpass={{ bucardo_password }}
+      chdir: /home/Bucardo-5.6.0
+    become_user: bucardo
+    when: sync_status.stdout == "0"
+    notify: Restart bucardo
+
+  - name: Add tables
+    shell:
+      cmd: ./bucardo add table all --db={{ local_name }} --herd={{ herd_name }}
+      chdir: /home/Bucardo-5.6.0
+    become_user: bucardo
+    when: sync_status.stdout == "0"
+    notify: Restart bucardo
+
+  - name: Add sequence
+    shell:
+      cmd: ./bucardo add sequence all --db={{ local_name }} --herd={{ herd_name }}
+      chdir: /home/Bucardo-5.6.0
+    become_user: bucardo
+    when: sync_status.stdout == "0"
+    notify: Restart bucardo
+
+  - name: Add group
+    shell:
+      cmd: ./bucardo add dbgoup {{ group_name }}
+      chdir: /home/Bucardo-5.6.0
+    become_user: bucardo
+    when: sync_status.stdout == "0"
+    notify: Restart bucardo
+
+  - name: Add local database to a group
+    shell:
+      cmd: ./bucardo add dbgroup {{ group_name }} {{ local_name }}:source
+      chdir: /home/Bucardo-5.6.0
+    become_user: bucardo
+    when: sync_status.stdout == "0"
+    notify: Restart bucardo
+
+  - name: Add remote database to a group
+    shell:
+      cmd: ./bucardo add dbgroup {{ group_name }} {{ remote_name }}:source
+      chdir: /home/Bucardo-5.6.0
+    become_user: bucardo
+    when: sync_status.stdout == "0"
+    notify: Restart bucardo
+
+  - name: Create sync for two databases
+    shell:
+      cmd: ./bucardo add sync {{ sync_name }} herd={{ herd_name }} dbs={{ group_name }}
+      chdir: /home/Bucardo-5.6.0
+    become_user: bucardo
+    when: sync_status.stdout == "0"
+    notify: Restart bucardo
+
+  handlers:
+
+  - name: Restart bucardo
+    shell:
+      cmd: ./bucardo restart 
+      chdir: /home/Bucardo-5.6.0
+    become_user: bucardo

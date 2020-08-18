@@ -1,0 +1,75 @@
+---
+- name: Gather facts from all instances
+  hosts: all
+
+- name: Create database, user, grant all privileges for PostgreSQL
+  hosts: postgresql
+  gather_facts: yes
+  become: true
+
+  tasks:
+  - name: Update all
+    yum: name=* state=latest update_cache=yes
+
+  - name: Install python-psycopg2 for PostgreSQL
+    yum: name=python-psycopg2 state=latest update_cache=yes
+
+  - name: Copy dumpfile
+    template: src=templates/psql_dump.j2 dest=/tmp/psql_dump.sql mode=0777
+
+  - name: Create user for logging
+    postgresql_user:
+      name: "{{ logging_name }}"
+      password: "{{ logging_pass }}"
+      db: postgres
+      priv: pg_stat_database:SELECT
+    become_user: postgres
+    no_log: yes
+
+  - name: Create a new database
+    postgresql_db:
+      name: "{{ db_name }}"
+    notify: Import dumfile into database
+    become_user: postgres
+
+  - name: Create user
+    postgresql_user:
+      name: "{{ db_username }}"
+      password: "{{ db_userpass }}"
+    notify: Give user privileges to database
+    become_user: postgres
+    no_log: yes
+
+  - name: Copy postgresql.conf
+    template:
+      src: templates/postgresql.conf  
+      dest: /var/lib/pgsql/data/postgresql.conf 
+      mode: 0644
+    notify: Restart PostgreSQL
+
+  - name: Copy pg_hba.conf
+    template:
+      src: templates/pg_hba.j2
+      dest: /var/lib/pgsql/data/pg_hba.conf
+      mode: 0644
+    notify: Restart PostgreSQL
+
+  handlers:
+
+  - name: Give user privileges to database
+    postgresql_privs:
+      db: "{{ db_name }}"
+      privs: ALL
+      type: database
+      role: "{{ db_username }}"
+    become_user: postgres
+
+  - name: Import dumfile into database
+    postgresql_db:
+      name: "{{ db_name }}"
+      state: restore
+      target: /tmp/psql_dump.sql
+    become_user: postgres
+
+  - name: Restart PostgreSQL
+    service: name=postgresql state=restarted enabled=true

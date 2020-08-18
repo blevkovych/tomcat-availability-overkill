@@ -1,0 +1,4 @@
+SHELL=/bin/bash
+MAILTO=""
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin
+*/5 * * * * root /opt/bucardoRestartIfStalled.sh
