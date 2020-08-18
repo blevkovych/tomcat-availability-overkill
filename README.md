@@ -63,3 +63,4 @@ Variables:
 - herd_name="The name of the herd. It's naming for a bunch of tables and sequences"
 - group_name="The name of the group where the  local and remote database will be added"
 - sync_name="The name of the synchronization"
+[Imgur](https://i.imgur.com/9x85yP6.jpg)
